@@ -1,5 +1,6 @@
 package jwn.linux_in_minecraft.mixin;
 
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ChatScreen;
 import net.minecraft.client.gui.widget.TextFieldWidget;
@@ -21,16 +22,19 @@ public class ChatScreenMixin {
     @Inject(method = "keyPressed", at = @At("HEAD"), cancellable = true)
     private void onKeyPressed(int keyCode, int scanCode, int modifiers, CallbackInfoReturnable<Boolean> cir) {
         if (keyCode == GLFW.GLFW_KEY_F4) {
-            LinuxChatScreen.startListeningForLinux();
+            if (LinuxChatScreen.linuxMode.get()) {
+                MinecraftClient.getInstance().setScreen(null);
+            } else {
+                LinuxChatScreen.startListeningForLinux();
+            }
             cir.setReturnValue(true);
         }
     }
 
     @Inject(method = "render", at = @At("HEAD"))
     private void onRender(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
-        String prefix = "~%s$ ".formatted(LinuxChatScreen.ROOT.relativize(LinuxChatScreen.CURRENT_PATH));
-        if (LinuxChatScreen.linuxMode.get() && !chatField.getText().startsWith(prefix)) {
-            chatField.setText(prefix);
+        if (LinuxChatScreen.linuxMode.get() && !chatField.getText().startsWith(LinuxChatScreen.getPREFIX())) {
+            chatField.setText(LinuxChatScreen.getPREFIX());
         }
     }
 }

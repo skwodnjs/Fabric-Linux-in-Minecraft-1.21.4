@@ -3,11 +3,12 @@ package jwn.linux_in_minecraft.linux;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 
 public class command {
     public static boolean cmd(String message) {
         String[] commands = message.split(" ");
-//        System.out.println(Arrays.toString(commands));
+        System.out.println(Arrays.toString(commands));
         if (message.equals("exit")) {
             return false;
         } else if (commands[0].equals("cd")) {
@@ -16,6 +17,8 @@ public class command {
         } else if (commands[0].equals("ls")) {
             ls(commands);
             return true;
+        } else if (message.equals("pwd")) {
+            pwd();
         }
         return true;
     }
@@ -24,7 +27,7 @@ public class command {
         if (commands.length == 1) {
             try {
                 Files.list(LinuxChatScreen.CURRENT_PATH).forEach(path -> {
-                    LinuxChatScreen.sendChatMessage((Files.isDirectory(path) ? "/" : "") + LinuxChatScreen.CURRENT_PATH.relativize(path), false);
+                    LinuxChatScreen.sendChatMessage("." + LinuxChatScreen.CURRENT_PATH.relativize(path) + (Files.isDirectory(path) ? "/" : ""), false);
                 });
             } catch (IOException e) {
                 throw new RuntimeException(e);
@@ -39,5 +42,9 @@ public class command {
                 LinuxChatScreen.CURRENT_PATH = newPath;
             }
         }
+    }
+
+    private static void pwd() {
+        LinuxChatScreen.sendChatMessage(LinuxChatScreen.CURRENT_PATH.toAbsolutePath().normalize().toString(), false);
     }
 }

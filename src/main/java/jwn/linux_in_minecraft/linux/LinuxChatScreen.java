@@ -15,21 +15,35 @@ public class LinuxChatScreen {
 
     public static final Path ROOT = MinecraftClient.getInstance().runDirectory.toPath();
     public static Path CURRENT_PATH;
-    public static String PREFIX = "";
+    private static String PREFIX = "";
 
     private static final MinecraftClient client = MinecraftClient.getInstance();
     private static boolean reChat = false;
 
-    public static void startListeningForLinux() {
-        linuxMode.set(!linuxMode.get());
-        if (linuxMode.get()) {
-            CURRENT_PATH = client.runDirectory.toPath();
+    public static void updatePrefix() {
+        ClientPlayerEntity player = client.player;
+        if (CURRENT_PATH != null) {
             Path relativize = ROOT.relativize(CURRENT_PATH);
-            client.setScreen(new ChatScreen("~%s$: ".formatted(relativize)));
-        } else {
-            client.setScreen(null);
+            PREFIX = "["
+                    + (player != null ? player.getName().getString() : "user")
+                    + "@Minecraft ~"
+                    + (relativize.toString().isEmpty() ? "" : "\\" + relativize)
+                    + "]$ ";
         }
-        sendChatMessage("Linux mode: "+ linuxMode.get(), true);
+    }
+
+    public static String getPREFIX() {
+        return PREFIX;
+    }
+
+    public static void startListeningForLinux() {
+        linuxMode.set(true);
+
+        CURRENT_PATH = client.runDirectory.toPath();
+        updatePrefix();
+        client.setScreen(new ChatScreen(getPREFIX()));
+
+        sendChatMessage("Linux mode: " + linuxMode.get(), true);
     }
 
     public static void sendChatMessage(String message, boolean overlay) {
@@ -43,14 +57,15 @@ public class LinuxChatScreen {
         ClientSendMessageEvents.ALLOW_CHAT.register((message) -> {
             if (linuxMode.get()) {
                 sendChatMessage(message, false);
-                reChat = command.cmd(message.replace("~%s$ ".formatted(ROOT.relativize(CURRENT_PATH)), "").stripTrailing());
+                reChat = command.cmd(message.replace(getPREFIX(), "").stripTrailing());
                 return false;
             }
             return true;
         });
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             if (reChat) {
-                client.setScreen(new ChatScreen("~%s$ ".formatted(ROOT.relativize(CURRENT_PATH))));
+                updatePrefix();
+                client.setScreen(new ChatScreen(getPREFIX()));
                 reChat = false;
             }
             if (linuxMode.get() && !(client.currentScreen instanceof ChatScreen)) {
