@@ -15,8 +15,8 @@
 	"icon": "assets/linux_in_minecraft/icon.png",
 	"environment": "client",
 	"entrypoints": {
-		"main": [
-			"jwn.linux_in_minecraft.LinuxInMinecraft"
+		"client": [
+			"jwn.linux_in_minecraft.LinuxInMinecraftClient"
 		]
 	},
 	"mixins": [
